@@ -1,6 +1,6 @@
-/*    
+/*
     Copyright (C) Paul Falstad and Iain Sharp
-    
+
     This file is part of CircuitJS1.
 
     CircuitJS1 is free software: you can redistribute it and/or modify
@@ -36,9 +36,9 @@ class VoltageElm extends CircuitElm {
     static final int WF_VAR = 7;
     double frequency, maxVoltage, freqTimeZero, bias,
 	phaseShift, dutyCycle, noiseValue;
-    
+
     static final double defaultPulseDuty = 1/(2*Math.PI);
-    
+
     VoltageElm(int xx, int yy, int wf) {
 	super(xx, yy);
 	waveform = wf;
@@ -67,23 +67,23 @@ class VoltageElm extends CircuitElm {
 	    flags &= ~FLAG_COS;
 	    phaseShift = pi/2;
 	}
-	
+
 	// old circuit files have the wrong duty cycle for pulse waveforms (wasn't configurable in the past)
 	if ((flags & FLAG_PULSE_DUTY) == 0 && waveform == WF_PULSE) {
 	    dutyCycle = defaultPulseDuty;
 	}
-	
+
 	reset();
     }
     int getDumpType() { return 'v'; }
-    
+
     String dump() {
 	// set flag so we know if duty cycle is correct for pulse waveforms
 	if (waveform == WF_PULSE)
 	    flags |= FLAG_PULSE_DUTY;
 	else
 	    flags &= ~FLAG_PULSE_DUTY;
-	
+
 	return super.dump() + " " + waveform + " " + frequency + " " +
 	    maxVoltage + " " + bias + " " + phaseShift + " " +
 	    dutyCycle;
@@ -119,7 +119,7 @@ class VoltageElm extends CircuitElm {
     double getVoltage() {
 	if (waveform != WF_DC && sim.dcAnalysisFlag)
 	    return bias;
-	
+
 	double w = 2*pi*(sim.t-freqTimeZero)*frequency + phaseShift;
 	switch (waveform) {
 	case WF_DC: return maxVoltage+bias;
@@ -141,22 +141,24 @@ class VoltageElm extends CircuitElm {
     final int circleSize = 17;
     void setPoints() {
 	super.setPoints();
-	calcLeads((waveform == WF_DC || waveform == WF_VAR) ? 8 : circleSize*2);
+	calcLeads(circleSize*2);
     }
     void draw(Graphics g) {
 	setBbox(x, y, x2, y2);
 	draw2Leads(g);
 	if (waveform == WF_DC) {
-	    setVoltageColor(g, volts[0]);
-	    setPowerColor(g, false);
-	    interpPoint2(lead1, lead2, ps1, ps2, 0, 10);
-	    drawThickLine(g, ps1, ps2);
-	    setVoltageColor(g, volts[1]);
-	    setPowerColor(g, false);
-	    int hs = 16;
-	    setBbox(point1, point2, hs);
-	    interpPoint2(lead1, lead2, ps1, ps2, 1, hs);
-	    drawThickLine(g, ps1, ps2);
+		setVoltageColor(g, volts[1]);
+		setPowerColor(g, false);
+		setBbox(point1, point2, circleSize);
+	    interpPoint(lead1, lead2, ps1, 0.5f);
+		drawThickCircle(g, ps1.x, ps1.y, circleSize);
+		setBbox(point1, point2, circleSize - 1);
+		drawThickLine(g, lead1, lead2);
+		g.setColor(whiteColor);
+		g.setFont(unitsFont);
+
+	    Point plusPoint = interpPoint(point1, point2, (dn/2+circleSize+4)/dn, 10*dsign );
+        plusPoint.y += 4;
 	} else {
 	    setBbox(point1, point2, circleSize);
 	    interpPoint(lead1, lead2, ps1, .5);
@@ -184,7 +186,7 @@ class VoltageElm extends CircuitElm {
 	}
 	drawPosts(g);
     }
-	
+
     void drawWaveform(Graphics g, Point center) {
 	g.setColor(needsHighlight() ? selectColor : Color.gray);
 	setPowerColor(g, false);
@@ -262,7 +264,7 @@ class VoltageElm extends CircuitElm {
 		drawValues(g, s, circleSize);
 	}
     }
-	
+
     int getVoltageSourceCount() {
 	return 1;
     }
@@ -357,13 +359,13 @@ class VoltageElm extends CircuitElm {
 		bias = 0;
 	    } else if (waveform != ow)
 		ei.newDialog = true;
-	    
+
 	    // change duty cycle if we're changing to or from pulse
 	    if (waveform == WF_PULSE && ow != WF_PULSE)
 		dutyCycle = defaultPulseDuty;
 	    else if (ow == WF_PULSE && waveform != WF_PULSE)
 		dutyCycle = .5;
-	    
+
 	    setPoints();
 	}
 	if (n == 4)
