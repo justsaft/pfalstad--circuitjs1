@@ -158,7 +158,11 @@ class VoltageElm extends CircuitElm {
 		g.setFont(unitsFont);
 
 	    Point plusPoint = interpPoint(point1, point2, (dn/2+circleSize+4)/dn, 10*dsign );
-        plusPoint.y += 4;
+		plusPoint.y += 4;
+		String inds = "+";
+		int w = (int) g.context.measureText(inds).getWidth();
+		g.drawString(inds, plusPoint.x - w / 2, plusPoint.y);
+
 	} else {
 	    setBbox(point1, point2, circleSize);
 	    interpPoint(lead1, lead2, ps1, .5);
